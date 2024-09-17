@@ -1,0 +1,9 @@
+emedia:
+  version: 1.x
+  js:
+    js/emedia.js: {}
+  css:
+    component:
+      css/emedia.css: {}
+  dependencies:
+    - core/jquery

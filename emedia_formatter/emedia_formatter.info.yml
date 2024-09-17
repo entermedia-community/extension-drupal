@@ -1,0 +1,9 @@
+name: Emedia Formatter
+description: Allows site builders and developers Enter Media Galleries
+type: module
+core_version_requirement: ^9 || ^10
+
+dependencies:
+  - drupal:media
+  - field
+# configure: emedia_formatter.settings

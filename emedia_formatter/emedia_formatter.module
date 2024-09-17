@@ -1,0 +1,11 @@
+<?php
+
+
+/**
+ * Implements hook_preprocess_HOOK() for media entermedia templates.
+ *
+ * Adds body classes if certain regions have content.
+ */
+function emedia_formatter_preprocess_media__entermedia(&$variables) {
+    $variables['#attached']['library'][] = 'emedia_formatter/emedia';
+}
