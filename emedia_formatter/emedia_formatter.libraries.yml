@@ -1,7 +1,9 @@
 emedia:
   version: 1.x
   js:
-    js/emedia.js: {}
+    js/jquery-brickvertical.js: {}
+    js/jquery-simpleLightbox.js: {}
+    js/enterMediaDb.js: {}
   css:
     component:
       css/emedia.css: {}

@@ -59,6 +59,7 @@ class EmediaWebGalleryFormatter extends FormatterBase {
         } else {
             $element[$delta] = ['#markup' => t('Failed to fetch the enter media web gallery.')];
         }
+      // Render each element as markup.
     }
 
     return $element;
