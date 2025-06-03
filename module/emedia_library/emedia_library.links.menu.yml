@@ -1,0 +1,6 @@
+emedia_library.settings:
+  title: 'eMedia Library Settings'
+  description: 'Configure settings for the eMedia Library plugin.'
+  parent: system.admin_config_media
+  route_name: emedia_library.settings
+  weight: 10

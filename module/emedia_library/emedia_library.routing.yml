@@ -1,0 +1,7 @@
+emedia_library.settings:
+  path: '/admin/config/media/emedia-library-settings'
+  defaults:
+    _form: '\Drupal\emedia_library\Form\EmediaLibrarySettingsForm'
+    _title: 'eMedia Library Settings'
+  requirements:
+    _permission: 'administer site configuration'

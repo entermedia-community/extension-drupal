@@ -1,0 +1,25 @@
+emedia_library_emedia_library_picker:
+  ckeditor5:
+    plugins:
+      - eMediaLibraryPlugin.EmediaLibrary
+   # Configuration that will be used directly by Drupal.
+  drupal:
+    label: eMEdia Library Picker
+    # The library loaded while using the editor.
+    library: emedia_library/emedia_library_picker
+    # The library loaded when configuring the text format using this plugin.
+    admin_library: emedia_library/admin.emedia_library_picker
+    toolbar_items:
+      # This should match the name of the corresponding plugin exported in the
+      # plugin's index.js.
+      emediaLibrary:
+        label: Emedia Library Picker
+    # If the plugin does not provide elements, set this as
+    # `elements: false`
+    elements: false
+    # *Additional configuration properties*
+    # conditions: for setting additional criteria that must be met for the
+    #   plugin to be active.
+    # class: Optional PHP class that makes it possible for the plugin to provide
+    #   dynamic values, or a configuration UI.
+    class: \Drupal\emedia_library\Plugin\CKEditor5\EmediaLibraryPluginConfig
