@@ -98,19 +98,24 @@ class EmediaLibraryField extends FieldItemBase {
    */
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
     $settings = $this->getSettings();
-
+  
+    // Retrieve the comma-separated list from the module settings.
+    $config = \Drupal::config('emedia_library.settings');
+    $image_size_options = $config->get('image_size_options') ?? 'webpthumbimage,webplargeimage,webpwidesscreencrop';
+  
+    $options = [];
+    foreach (explode(',', $image_size_options) as $option) {
+      $options[trim($option)] = t(ucfirst(trim($option)));
+    }
+  
     $form2['image_size'] = [
       '#type' => 'select',
       '#title' => t('Default Image Size'),
-      '#options' => [
-        'thumbnail' => t('Thumbnail'),
-        'full' => t('Full'),
-        'widesscreencrop' => t('Wide Screen Banner'),
-      ],
+      '#options' => $options,
       '#default_value' => $settings['image_size'],
       '#description' => t('Select the default image size for this field.'),
     ];
-
+  
     return $form2;
   }
 
