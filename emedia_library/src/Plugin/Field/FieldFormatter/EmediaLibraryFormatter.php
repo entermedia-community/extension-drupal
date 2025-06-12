@@ -32,12 +32,8 @@ class EmediaLibraryFormatter extends FormatterBase {
     foreach ($items as $delta => $item) {
       
       $assetURL = $mediadbUrl . "/" . $item->asset_id;
-
-      
-      // Retrieve the image_size from the field type properties.
       $field_definition = $items->getFieldDefinition();
       $image_size = $field_definition->getSetting('image_size') ?? '';
- 
 
       // Initialize cURL.
       $ch = curl_init();
@@ -65,7 +61,21 @@ class EmediaLibraryFormatter extends FormatterBase {
               
             $data = $jsonresponse["data"];
             $downloads = $data["downloads"];
-            $imgsrc = $downloads[0]['download'];
+            $imgsrc = '';
+            foreach ($downloads as $download) {
+              if (isset($download['id']) && $download['id'] === $image_size) {
+                $imgsrc = $download['download'];
+                break;
+              }
+            }
+
+            // If no match is found, default to the first download element.
+            if ($imgsrc === '' && isset($downloads[0]['download'])) {
+              $imgsrc = $downloads[0]['download'];
+            }
+
+
+
             if ($imgsrc!== '')
             {
               $html = '<div class="emedia-image">';
@@ -74,7 +84,7 @@ class EmediaLibraryFormatter extends FormatterBase {
                 
                 $title = $data["assettitle"];
                 if ($title !== '') {
-                  $html .= '<p>' . $title . '</p>';
+                //  $html .= '<p>' . $title . '</p>';
                 }
               }
 

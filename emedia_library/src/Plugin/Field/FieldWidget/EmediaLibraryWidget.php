@@ -100,7 +100,6 @@ class EmediaLibraryWidget extends WidgetBase {
                 $downloads = $data["downloads"];
                 $imgsrc = '';
                 foreach ($downloads as $download) {
-                  print_r($download["id"] . " ++ ");
                   if (isset($download['id']) && $download['id'] === $image_size) {
                     $imgsrc = $download['download'];
                     break;
