@@ -138,18 +138,10 @@ var ckeditor;
                 src: assetSrc, 
               });
             
-              // Append the newly created img element to the parent container
               assetfield.closest('.eml-field-container').find('.emedia-thumbnail-wrapper').append(img);
             } else {
-              // Update the src attribute if the img element already exists
               img.attr('src', assetSrc);
             }
-
-            /*const iframe = document.getElementById('blockfind');
-            if (iframe) {
-              iframe.remove(); // Remove the iframe from the DOM.
-            }*/
-            // Close the Drupal dialog.
             $('.emedia-dialog').dialog('close');
           }
 
@@ -170,9 +162,20 @@ var ckeditor;
        alt: assetData.assettitle || ''
      });
      writer.append(emediaImg, emediaBox);
+
+     //UN: Caption  copyrightnotice | headline en
+     if (assetData.copyrightnotice != '') {
+       let caption = assetData.copyrightnotice;
+       if (assetData.headline && assetData.headline.en != '') {
+         caption += ' | ' + assetData.headline.en;
+       }
+     }
+     else {
+       let caption = assetData.assettitle || '';
+     }
  
      const emediaCaption = writer.createElement('emediaCaption');
-     writer.insertText(assetData.assettitle, emediaCaption);
+     writer.insertText(caption, emediaCaption);
      writer.append(emediaCaption, emediaBox);
      
      const insertPosition = editor.model.document.selection.getFirstPosition() || 0;
