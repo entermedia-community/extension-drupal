@@ -40,6 +40,8 @@ class EmediaLibraryWidget extends WidgetBase {
 
     $field_definition = $items->getFieldDefinition();
     $uid = $field_definition->getUniqueIdentifier();
+
+    $image_size = $field_definition->getSetting('image_size') ?? 'webplargeimage';
     
     // Generate a unique ID for the asset_id field using $element['#id'].
     $field_wrapper_id = 'wrapper-'.$delta;
@@ -94,9 +96,21 @@ class EmediaLibraryWidget extends WidgetBase {
             if (isset($jsonresponse["data"])) {
               $data = $jsonresponse["data"];
               if (is_array($data["downloads"]) && count($data["downloads"]) > 0) {
-                // Get the first download URL.
+
                 $downloads = $data["downloads"];
-                $imgsrc = $downloads[0]['download'];
+                $imgsrc = '';
+                foreach ($downloads as $download) {
+                  print_r($download["id"] . " ++ ");
+                  if (isset($download['id']) && $download['id'] === $image_size) {
+                    $imgsrc = $download['download'];
+                    break;
+                  }
+                }
+
+                // If no match is found, default to the first download element.
+                if ($imgsrc === '' && isset($downloads[0]['download'])) {
+                  $imgsrc = $downloads[0]['download'];
+                }
                 
                 if ($imgsrc !== '') {
                   $thumbnail_url = $imgsrc;
