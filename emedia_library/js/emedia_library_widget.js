@@ -163,15 +163,16 @@ var ckeditor;
      });
      writer.append(emediaImg, emediaBox);
 
+     let caption = ''
      //UN: Caption  copyrightnotice | headline en
      if (assetData.copyrightnotice != '') {
-       let caption = assetData.copyrightnotice;
+       caption = assetData.copyrightnotice;
        if (assetData.headline && assetData.headline.en != '') {
          caption += ' | ' + assetData.headline.en;
        }
      }
      else {
-       let caption = assetData.assettitle || '';
+       caption = assetData.assettitle || '';
      }
  
      const emediaCaption = writer.createElement('emediaCaption');
