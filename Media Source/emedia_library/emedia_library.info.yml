@@ -1,0 +1,7 @@
+name: Emedia Library
+type: module
+description: 'Provides image media from an eMedia Library.'
+core_version_requirement: ^9 || ^10
+package: Media
+dependencies:
+  - media

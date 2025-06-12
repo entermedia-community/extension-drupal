@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * Implements hook_page_attachments().
+ */
+function emedia_library_page_attachments(array &$attachments) {
+  $config = \Drupal::config('emedia_library.settings');
+  $emedialibraryUrl = $config->get('emedialibrary-url');
+  $emedialibraryKey = $config->get('emedialibrary-key');
+
+  $attachments['#attached']['drupalSettings']['emedia_library']['emedialibraryKey'] = $emedialibraryKey;
+  $attachments['#attached']['drupalSettings']['emedia_library']['emedialibraryUrl'] = $emedialibraryUrl;
+  $attachments['#attached']['library'][] = 'emedia_library/emedia_library';
+}

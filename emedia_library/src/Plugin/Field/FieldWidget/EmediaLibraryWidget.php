@@ -33,11 +33,13 @@ class EmediaLibraryWidget extends WidgetBase {
     $emedialibraryUrl = $config->get('emedialibrary-url');
     $emedialibraryKey = $config->get('emedialibrary-key');
 
-    // Append the key as a query parameter to the URL.
-    $emedialibraryUrl = $emedialibraryUrl . '/blockfind/index.html?entermedia.key=' . $emedialibraryKey;
+    
+    $blockfindUrl = $emedialibraryUrl . '/blockfind/index.html?entermedia.key=' . $emedialibraryKey;
 
-    // Dynamically pull the field label.
     $field_label = $element['#title'];
+
+    $field_definition = $items->getFieldDefinition();
+    $uid = $field_definition->getUniqueIdentifier();
     
     // Generate a unique ID for the asset_id field using $element['#id'].
     $field_wrapper_id = 'wrapper-'.$delta;
@@ -45,7 +47,7 @@ class EmediaLibraryWidget extends WidgetBase {
     $assetid = $items[$delta]->asset_id ?? '';
 
     // Add a container for all elements.
-    $element['#prefix'] = '<div id="emedia-library-container-' . $delta . '" class="emedia-library-container">';
+    $element['#prefix'] = '<div id="eml-field-' . $uid . '" data-fieldid="'.$uid.'" class="eml-field-container">';
     $element['#suffix'] = '</div>';
 
 
@@ -64,9 +66,6 @@ class EmediaLibraryWidget extends WidgetBase {
     ];
     $thumbnail_url = '';
     if ($assetid != '') {
-        // Get the eMedia Library URL and API key from the module settings.
-      $emedialibraryUrl = \Drupal::config('emedia_library.settings')->get('emedialibrary-url');
-      $entermediaKey = \Drupal::config('emedia_library.settings')->get('emedialibrary-key');
       $mediadbUrl = $emedialibraryUrl . "/mediadb/services/module/asset/data";
 
       $assetURL = $mediadbUrl . "/" . $assetid;
@@ -79,7 +78,7 @@ class EmediaLibraryWidget extends WidgetBase {
       curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
         'X-tokentype: entermedia', 
-        'X-token: ' . $entermediaKey, 
+        'X-token: ' . $emedialibraryKey, 
       ]);
 
       // Execute the cURL request.
@@ -90,26 +89,45 @@ class EmediaLibraryWidget extends WidgetBase {
       
       if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
         $jsonresponse = json_decode($response, TRUE);
-        $data = $jsonresponse["data"];
-        $downloads = $data["downloads"];
-        $imgsrc = $downloads[0]['download'];
-        
-        if ($imgsrc!== '')
-        {
-          $thumbnail_url = $imgsrc;
+        if (isset($jsonresponse["response"])) {
+          if($jsonresponse["response"]["status"] == 'ok') {
+            if (isset($jsonresponse["data"])) {
+              $data = $jsonresponse["data"];
+              if (is_array($data["downloads"]) && count($data["downloads"]) > 0) {
+                // Get the first download URL.
+                $downloads = $data["downloads"];
+                $imgsrc = $downloads[0]['download'];
+                
+                if ($imgsrc !== '') {
+                  $thumbnail_url = $imgsrc;
+                }
+              }
+              
+              if ($imgsrc!== '')
+              {
+                $thumbnail_url = $imgsrc;
+              }
+            }
+          }
         }
      }
     }
 
     // Add a thumbnail field to display the selected asset's preview image.
     if ($thumbnail_url !== '') {
+      $thumbnailmarkup = '<img id="eml-thumbnail-' . $uid . '" class="emedia-thumbnail" src="' . $thumbnail_url . '" alt="' . $this->t('Thumbnail') . '" style="max-width: 150px; max-height: 150px;">';
+    }
+    else
+    {
+      $thumbnailmarkup = '';
+    }
       $element['thumbnail'] = [
         '#type' => 'markup',
-        '#markup' => '<img id="thumbnail-' . $delta . '" class="emedia-thumbnail" src="' . $thumbnail_url . '" alt="' . $this->t('Thumbnail') . '" style="max-width: 150px; max-height: 150px;">',
+        '#markup' => $thumbnailmarkup,
         '#prefix' => '<div class="emedia-thumbnail-wrapper">',
         '#suffix' => '</div>',
       ];
-    }
+    
 
     $element['pull_button'] = [
       '#type' => 'button',

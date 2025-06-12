@@ -58,43 +58,52 @@ class EmediaLibraryFormatter extends FormatterBase {
 
       if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
         $jsonresponse = json_decode($response, TRUE);
-        $data = $jsonresponse["data"];
-        $downloads = $data["downloads"];
-        $imgsrc = $downloads[0]['download'];
-        if ($imgsrc!== '')
-        {
-          $html = '<div class="emedia-image">';
-          $html .= '<img src="' . $imgsrc . '" alt="" />';
+        if (isset($jsonresponse["response"])) {
+          
+          if ($jsonresponse["response"]["status"] == 'ok')
+          {
+              
+            $data = $jsonresponse["data"];
+            $downloads = $data["downloads"];
+            $imgsrc = $downloads[0]['download'];
+            if ($imgsrc!== '')
+            {
+              $html = '<div class="emedia-image">';
+              $html .= '<img src="' . $imgsrc . '" alt="" />';
+              if (isset($data["assettitle"]) && $data["assettitle"] !== '') {
+                
+                $title = $data["assettitle"];
+                if ($title !== '') {
+                  $html .= '<p>' . $title . '</p>';
+                }
+              }
 
-          $title = $data["assettitle"];
-          if ($title !== '') {
-            $html .= '<p>' . $title . '</p>';
+              //$html .= '<p>' . $data['description'] . '</p>';
+              $html .= '</div>';
+
+              $elements[$delta] = [
+                '#type' => 'processed_text',
+                '#text' => $html,
+                '#format' => 'full_html',
+                '#cache' => [
+                  'max-age' => 1000 * 60 * 60, // Cache for 1 hour.
+                ],
+                //'#label_hidden' => 'true', 
+              ];
+            }
+            else {
+              // If no image is found, log the error and display a message.
+              \Drupal::logger('emedia_library')->error('No image found for asset ID @id at @address', [
+                '@id' => $item->asset_id,
+                '@address' => $assetURL,
+              ]);
+
+              $elements[$delta] = [
+                '#markup' => $this->t('No image found for this eMedia Library asset.'),
+                //'#label_hidden' => 'true', // Hide the label.
+              ];
+            }
           }
-
-          //$html .= '<p>' . $data['description'] . '</p>';
-          $html .= '</div>';
-
-          $elements[$delta] = [
-            '#type' => 'processed_text',
-            '#text' => $html,
-            '#format' => 'full_html',
-            '#cache' => [
-              'max-age' => 1000 * 60 * 60, // Cache for 1 hour.
-            ],
-            //'#label_hidden' => 'true', 
-          ];
-        }
-        else {
-          // If no image is found, log the error and display a message.
-          \Drupal::logger('emedia_library')->error('No image found for asset ID @id at @address', [
-            '@id' => $item->asset_id,
-            '@address' => $assetURL,
-          ]);
-
-          $elements[$delta] = [
-            '#markup' => $this->t('No image found for this eMedia Library asset.'),
-            //'#label_hidden' => 'true', // Hide the label.
-          ];
         }
       } else {
         // Log the error if the cURL request fails.

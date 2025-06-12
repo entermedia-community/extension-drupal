@@ -7,6 +7,7 @@ emedia_library_widget:
   dependencies:
     - core/jquery
     - core/drupal
+    - core/drupalSettings
 emedia_library_picker:
   js:
     js/plugins/emedia_library_picker/eMediaLibraryPlugin.js: { preprocess: false, minified: true }
