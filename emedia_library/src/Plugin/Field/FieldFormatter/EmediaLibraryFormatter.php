@@ -45,7 +45,7 @@ class EmediaLibraryFormatter extends FormatterBase {
         'X-tokentype: entermedia', 
         'X-token: ' . $entermediaKey, 
       ]);
-print_r($mediadbUrl);
+
       // Execute the cURL request.
       $response = curl_exec($ch);
       $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
