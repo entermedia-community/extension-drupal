@@ -133,7 +133,7 @@ class EmediaLibraryField extends FieldItemBase {
 
  $query = [
     "page" => "1",
-    "hitsperpage" => "20",
+    "hitsperpage" => "40",
     "query" => [
       "terms" => [
         [
