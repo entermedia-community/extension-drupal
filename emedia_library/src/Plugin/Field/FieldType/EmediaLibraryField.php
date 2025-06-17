@@ -101,12 +101,15 @@ class EmediaLibraryField extends FieldItemBase {
   
     // Retrieve the comma-separated list from the module settings.
     $config = \Drupal::config('emedia_library.settings');
+/*
     $image_size_options = $config->get('image_size_options') ?? 'webpthumbimage,webplargeimage,webpwidesscreencrop';
-  
     $options = [];
     foreach (explode(',', $image_size_options) as $option) {
       $options[trim($option)] = t(ucfirst(trim($option)));
     }
+*/
+    $options = $this->fetchImageSizeOptions();
+  
   
     $form2['image_size'] = [
       '#type' => 'select',
@@ -118,6 +121,60 @@ class EmediaLibraryField extends FieldItemBase {
   
     return $form2;
   }
+
+
+  protected function fetchImageSizeOptions() {
+  $options = [];
+
+  // Get the eMedia Library URL and API key from the module settings.
+  $emedialibraryUrl = \Drupal::config('emedia_library.settings')->get('emedialibrary-url');
+  $entermediaKey = \Drupal::config('emedia_library.settings')->get('emedialibrary-key');
+  $mediadbUrl = $emedialibraryUrl . "/mediadb/services/lists/search/convertpreset";
+
+ $query = [
+    "page" => "1",
+    "hitsperpage" => "20",
+    "query" => [
+      "terms" => [
+        [
+          "field" => "id",
+          "operation" => "matches",
+          "value" => "*"
+        ]
+      ]
+    ]
+  ];
+
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, $mediadbUrl);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_TIMEOUT_MS, 3000);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    'X-tokentype: entermedia', 
+    'X-token: ' . $entermediaKey, 
+  ]);
+
+  curl_setopt($ch, CURLOPT_POST, true);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($query));
+
+  $response = curl_exec($ch);
+  $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  curl_close($ch);
+
+  if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
+    $json = json_decode($response, TRUE);
+    // Adjust the following line to match your API's JSON structure
+    if (isset($json['results']) && is_array($json['results'])) {
+      foreach ($json['results'] as $preset) {
+        // Assuming each $size is a string, or adjust as needed
+        $options[$preset["id"]] = $preset["name"];
+      }
+    }
+  }
+
+  return $options;
+}
 
   /**
    * Validate the settings form for the field type.

@@ -95,6 +95,7 @@ class EmediaLibraryWidget extends WidgetBase {
           if($jsonresponse["response"]["status"] == 'ok') {
             if (isset($jsonresponse["data"])) {
               $data = $jsonresponse["data"];
+              
               if (is_array($data["downloads"]) && count($data["downloads"]) > 0) {
 
                 $downloads = $data["downloads"];

@@ -19,25 +19,25 @@ class EmediaLibraryFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldItemListInterface $items, $langcode) {
+  public function viewElements(FieldItemListInterface $values, $langcode) {
     $elements = [];
 
     // Get the eMedia Library URL and API key from the module settings.
     $emedialibraryUrl = \Drupal::config('emedia_library.settings')->get('emedialibrary-url');
     $entermediaKey = \Drupal::config('emedia_library.settings')->get('emedialibrary-key');
-    $mediadbUrl = $emedialibraryUrl . "/mediadb/services/module/asset/data";
 
-    
+    $field_definition = $values->getFieldDefinition();
+    $presetid = $field_definition->getSetting('image_size') ?? '';
 
-    foreach ($items as $delta => $item) {
-      
-      $assetURL = $mediadbUrl . "/" . $item->asset_id;
-      $field_definition = $items->getFieldDefinition();
-      $image_size = $field_definition->getSetting('image_size') ?? '';
+    $mediadbUrl = $emedialibraryUrl . "/mediadb/services/module/asset/players/webplayer/render.json";
+
+    foreach ($values as $delta => $value) {     
+      //Only one value exists in the field.
+      $mediadbUrl = $mediadbUrl . "?assetid=".$value->asset_id."&presetid=".$presetid;
 
       // Initialize cURL.
       $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, $assetURL);
+      curl_setopt($ch, CURLOPT_URL, $mediadbUrl);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($ch, CURLOPT_TIMEOUT_MS, 2000);
       curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -45,7 +45,7 @@ class EmediaLibraryFormatter extends FormatterBase {
         'X-tokentype: entermedia', 
         'X-token: ' . $entermediaKey, 
       ]);
-
+print_r($mediadbUrl);
       // Execute the cURL request.
       $response = curl_exec($ch);
       $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -58,38 +58,11 @@ class EmediaLibraryFormatter extends FormatterBase {
           
           if ($jsonresponse["response"]["status"] == 'ok')
           {
-              
-            $data = $jsonresponse["data"];
-            $downloads = $data["downloads"];
-            $imgsrc = '';
-            foreach ($downloads as $download) {
-              if (isset($download['id']) && $download['id'] === $image_size) {
-                $imgsrc = $download['download'];
-                break;
-              }
-            }
+            
+            $html = $jsonresponse["html"];
 
-            // If no match is found, default to the first download element.
-            if ($imgsrc === '' && isset($downloads[0]['download'])) {
-              $imgsrc = $downloads[0]['download'];
-            }
-
-
-
-            if ($imgsrc!== '')
+            if ($html!== '')
             {
-              $html = '<div class="emedia-image">';
-              $html .= '<img src="' . $imgsrc . '" alt="" />';
-              if (isset($data["assettitle"]) && $data["assettitle"] !== '') {
-                
-                $title = $data["assettitle"];
-                if ($title !== '') {
-                //  $html .= '<p>' . $title . '</p>';
-                }
-              }
-
-              //$html .= '<p>' . $data['description'] . '</p>';
-              $html .= '</div>';
 
               $elements[$delta] = [
                 '#type' => 'processed_text',
@@ -104,8 +77,8 @@ class EmediaLibraryFormatter extends FormatterBase {
             else {
               // If no image is found, log the error and display a message.
               \Drupal::logger('emedia_library')->error('No image found for asset ID @id at @address', [
-                '@id' => $item->asset_id,
-                '@address' => $assetURL,
+                '@id' => $value->asset_id,
+                '@address' => $mediadbUrl,
               ]);
 
               $elements[$delta] = [
@@ -121,7 +94,7 @@ class EmediaLibraryFormatter extends FormatterBase {
         \Drupal::logger('emedia_library')->error('Failed at @address - HTTP Code: @code. cURL Error: @error', [
           '@code' => $httpcode,
           '@error' => $curl_error,
-          '@address' => $assetURL,
+          '@address' => $mediadbUrl,
         ]);
 
         $elements[$delta] = [

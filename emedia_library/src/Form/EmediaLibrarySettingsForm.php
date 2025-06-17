@@ -56,14 +56,7 @@ class EmediaLibrarySettingsForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
-    $form['image_size_options'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Image Size Options'),
-      '#default_value' => $config->get('image_size_options'),
-      '#description' => $this->t('Enter a comma-separated list of image size options (e.g., webpthumbimage,webplargeimage,webpwidesscreencrop).'),
-      '#required' => TRUE,
-    ];
-  
+
 
     return parent::buildForm($form, $form_state);
   }
@@ -80,7 +73,6 @@ class EmediaLibrarySettingsForm extends ConfigFormBase {
     $this->config('emedia_library.settings')
       ->set('emedialibrary-url', $form_state->getValue('emedialibrary_url'))
       ->set('emedialibrary-key', $form_state->getValue('emedialibrary_key'))
-      ->set('image_size_options', $form_state->getValue('image_size_options'))
       ->save();
 
     parent::submitForm($form, $form_state);
