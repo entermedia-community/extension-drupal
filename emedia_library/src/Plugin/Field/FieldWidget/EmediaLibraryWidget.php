@@ -41,7 +41,7 @@ class EmediaLibraryWidget extends WidgetBase {
     $field_definition = $items->getFieldDefinition();
     $uid = $field_definition->getUniqueIdentifier();
 
-    $image_size = $field_definition->getSetting('image_size') ?? 'webplargeimage';
+    $presetid = $field_definition->getSetting('presetid') ?? 'webplargeimage';
     
     // Generate a unique ID for the asset_id field using $element['#id'].
     $field_wrapper_id = 'wrapper-'.$delta;
@@ -66,6 +66,15 @@ class EmediaLibraryWidget extends WidgetBase {
         'class' => ['emedia-image-assetid'],
       ],
     ];
+
+    $element['presetid'] = [
+      '#type' => 'hidden',
+      '#default_value' => $presetid,
+      '#attributes' => [
+        'class' => ['emedia-image-presetid'],
+      ],
+    ];
+
     $thumbnail_url = '';
     if ($assetid != '') {
       $mediadbUrl = $emedialibraryUrl . "/mediadb/services/module/asset/data";
@@ -101,7 +110,7 @@ class EmediaLibraryWidget extends WidgetBase {
                 $downloads = $data["downloads"];
                 $imgsrc = '';
                 foreach ($downloads as $download) {
-                  if (isset($download['id']) && $download['id'] === $image_size) {
+                  if (isset($download['id']) && $download['id'] === $presetid) {
                     $imgsrc = $download['download'];
                     break;
                   }

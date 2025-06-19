@@ -27,23 +27,13 @@ class EmediaLibraryField extends FieldItemBase {
     $properties['asset_id'] = DataDefinition::create('string')
       ->setLabel(t('Asset ID'));
 
-      $config = \Drupal::config('emedia_library.settings');
-      $emedialibraryUrl = $config->get('emedialibrary-url');
-      $emedialibraryKey = $config->get('emedialibrary-key');
+     // Retrieve  comma-separated list from the module settings.
+    $options = EmediaLibraryField::fetchImageSizeOptions();
+    
 
-
-      
-
-    $properties['image_size'] = DataDefinition::create('string')
-      ->setLabel(t('Image Size'))
-      ->setDescription(t('Select the image size.'))
-      ->addConstraint('AllowedValues', [
-        'choices' => [
-          'thumbnail' => t('Thumbnail'),
-          'full' => t('Full'),
-          'custom' => t('Custom'),
-        ],
-      ]);
+    $properties['presetid'] = DataDefinition::create('string')
+      ->setLabel(t('Preset Id'))
+      ->setDescription(t('Select the Preset Id for this asset.'));
 
     return $properties;
   }
@@ -58,7 +48,7 @@ class EmediaLibraryField extends FieldItemBase {
           'type' => 'varchar',
           'length' => 255,
         ],
-        'image_size' => [
+        'presetid' => [
           'type' => 'varchar',
           'length' => 128,
         ],
@@ -70,7 +60,7 @@ class EmediaLibraryField extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    return empty($this->get('asset_id')->getValue()) && empty($this->get('image_size')->getValue());
+    return empty($this->get('asset_id')->getValue());
   }
 
   /**
@@ -81,7 +71,7 @@ class EmediaLibraryField extends FieldItemBase {
    */
   public static function defaultFieldSettings() {
     return [
-      'image_size' => 'thumbnail',
+      'presetid' => 'webplargeimage',
     ];
   }
 
@@ -99,31 +89,23 @@ class EmediaLibraryField extends FieldItemBase {
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
     $settings = $this->getSettings();
   
-    // Retrieve the comma-separated list from the module settings.
-    $config = \Drupal::config('emedia_library.settings');
-/*
-    $image_size_options = $config->get('image_size_options') ?? 'webpthumbimage,webplargeimage,webpwidesscreencrop';
-    $options = [];
-    foreach (explode(',', $image_size_options) as $option) {
-      $options[trim($option)] = t(ucfirst(trim($option)));
-    }
-*/
+    // Retrieve  comma-separated list from the module settings.
     $options = $this->fetchImageSizeOptions();
   
   
-    $form2['image_size'] = [
+    $form2['presetid'] = [
       '#type' => 'select',
-      '#title' => t('Default Image Size'),
+      '#title' => t('Preset Id'),
       '#options' => $options,
-      '#default_value' => $settings['image_size'],
-      '#description' => t('Select the default image size for this field.'),
+      '#default_value' => $settings['presetid'],
+      '#description' => t('Select the default Preset Id for this field.'),
     ];
   
     return $form2;
   }
 
 
-  protected function fetchImageSizeOptions() {
+  public static function fetchImageSizeOptions() {
   $options = [];
 
   // Get the eMedia Library URL and API key from the module settings.
@@ -164,10 +146,8 @@ class EmediaLibraryField extends FieldItemBase {
 
   if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
     $json = json_decode($response, TRUE);
-    // Adjust the following line to match your API's JSON structure
     if (isset($json['results']) && is_array($json['results'])) {
       foreach ($json['results'] as $preset) {
-        // Assuming each $size is a string, or adjust as needed
         $options[$preset["id"]] = $preset["name"];
       }
     }
@@ -195,7 +175,7 @@ class EmediaLibraryField extends FieldItemBase {
     $summary = [];
     $settings = $this->getSettings();
 
-    $summary[] = t('Default image size: @size', ['@size' => $settings['image_size']]);
+    $summary[] = t('Default Preset Id: @size', ['@size' => $settings['presetid']]);
 
     return $summary;
   }

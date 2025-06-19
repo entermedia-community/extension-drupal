@@ -27,7 +27,7 @@ class EmediaLibraryFormatter extends FormatterBase {
     $entermediaKey = \Drupal::config('emedia_library.settings')->get('emedialibrary-key');
 
     $field_definition = $values->getFieldDefinition();
-    $presetid = $field_definition->getSetting('image_size') ?? '';
+    $presetid = $field_definition->getSetting('presetid') ?? '';
 
     $mediadbUrl = $emedialibraryUrl . "/mediadb/services/module/asset/players/webplayer/render.json";
 
