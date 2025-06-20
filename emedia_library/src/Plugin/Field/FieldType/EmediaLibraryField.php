@@ -27,10 +27,6 @@ class EmediaLibraryField extends FieldItemBase {
     $properties['asset_id'] = DataDefinition::create('string')
       ->setLabel(t('Asset ID'));
 
-     // Retrieve  comma-separated list from the module settings.
-    $options = EmediaLibraryField::fetchImageSizeOptions();
-    
-
     $properties['presetid'] = DataDefinition::create('string')
       ->setLabel(t('Preset Id'))
       ->setDescription(t('Select the Preset Id for this asset.'));
@@ -48,10 +44,7 @@ class EmediaLibraryField extends FieldItemBase {
           'type' => 'varchar',
           'length' => 255,
         ],
-        'presetid' => [
-          'type' => 'varchar',
-          'length' => 128,
-        ],
+        
       ],
     ];
   }
