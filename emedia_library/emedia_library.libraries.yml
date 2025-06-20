@@ -1,5 +1,6 @@
 emedia_library_widget:
   js:
+    js/emedia_library.js: {}
     js/emedia_library_widget.js: {}
   css:
     theme:
@@ -10,6 +11,7 @@ emedia_library_widget:
     - core/drupalSettings
 emedia_library_picker:
   js:
+    js/emedia_library.js: {}
     js/plugins/emedia_library_picker/eMediaLibraryPlugin.js: { preprocess: false, minified: true }
   dependencies:
     - core/ckeditor5
