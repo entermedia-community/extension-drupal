@@ -14,6 +14,9 @@ emedia_library_picker:
   js:
     js/emedia_library.js: {}
     js/plugins/emedia_library_picker/eMediaLibraryPlugin.js: { preprocess: false, minified: true }
+  css:
+    theme:
+      css/emedia_library.css: {}
   dependencies:
     - core/ckeditor5
     - core/jquery.ui.dialog
