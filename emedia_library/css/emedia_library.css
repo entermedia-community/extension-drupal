@@ -1,0 +1,19 @@
+.emediadialog {
+  background-color: #f9f9f9; /* Set a custom background color */
+  width: calc(100vw - 4rem)!important; /* Set width to full viewport width minus margins */
+  height: calc(100vh - 4rem)!important;
+}
+
+.emediadialog .ui-dialog-titlebar {
+  
+}
+
+.emediadialog .ui-dialog-titlebar-close {
+  color: #fff; /* Set close button color */
+}
+
+.ui-dialog.emediadialog .ui-dialog-content {
+  padding: 0;
+  height: calc(100% - 70px)!important;
+  overflow: unset!important;
+}

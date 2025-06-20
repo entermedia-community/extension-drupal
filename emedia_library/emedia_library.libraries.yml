@@ -4,6 +4,7 @@ emedia_library_widget:
     js/emedia_library_widget.js: {}
   css:
     theme:
+      css/emedia_library.css: {}
       css/emedia_library_widget.css: {}
   dependencies:
     - core/jquery
@@ -24,5 +25,6 @@ emedia_library_picker:
 admin.emedia_library_picker:
   css:
     theme:
+      css/emedia_library.css: {}
       css/emedia_library_picker.admin.css: { }
 
