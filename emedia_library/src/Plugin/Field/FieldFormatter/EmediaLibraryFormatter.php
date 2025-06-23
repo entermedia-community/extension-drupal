@@ -27,30 +27,26 @@ class EmediaLibraryFormatter extends FormatterBase {
     $entermediaKey = \Drupal::config('emedia_library.settings')->get('emedialibrary-key');
 
     $field_definition = $values->getFieldDefinition();
-    $presetid = $field_definition->getSetting('presetid') ?? '';
+    $preset_id = $field_definition->getSetting('preset_id') ?? '';
 
     $mediadbUrl = $emedialibraryUrl . "/mediadb/services/module/asset/players/webplayer/render.json";
 
     foreach ($values as $delta => $value) {     
       //Only one value exists in the field.
-      $mediadbUrl = $mediadbUrl . "?assetid=".$value->asset_id."&presetid=".$presetid;
+      $mediadbUrl = $mediadbUrl . "?assetid=".$value->asset_id."&presetid=".$preset_id;
 
-      // Initialize cURL.
-      $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, $mediadbUrl);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_TIMEOUT_MS, 2000);
-      curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'X-tokentype: entermedia', 
-        'X-token: ' . $entermediaKey, 
+     
+      $client = \Drupal::httpClient();
+      $response = $client->post($mediadbUrl, [
+        'headers' => [
+          'Content-Type' => 'application/json',
+          'X-tokentype' => 'entermedia', 
+          'X-token' => $entermediaKey,
+        ],
+        'body' => json_encode($query),
+        'timeout' => 3,
       ]);
-
-      // Execute the cURL request.
-      $response = curl_exec($ch);
-      $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-      $curl_error = curl_error($ch); // Capture cURL error message.
-      curl_close($ch);
+      $httpcode = $response->getStatusCode();
 
       if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
         $jsonresponse = json_decode($response, TRUE);
