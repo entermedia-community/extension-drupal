@@ -67,18 +67,9 @@ class EmediaLibraryFieldGallery extends FieldItemBase {
    */
   public static function defaultFieldSettings() {
     return [
-      'player_id' => 'webplargeimage',
+      'player_id' => 'gallery',
     ];
   }
-
-  /**
- * {@inheritdoc}
- */
-public function getSettings() {
-  return [
-    'icon' => 'image',
-  ];
-}
 
   /**
    * Build the settings form for the field type.
@@ -93,30 +84,30 @@ public function getSettings() {
    */
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
     $settings = $this->getSettings();
+
+      // Get the eMedia Library URL and API key from the module settings.
+    $emedialibraryUrl = \Drupal::config('emedia_library.settings')->get('emedialibrary-url');
+    $entermediaKey = \Drupal::config('emedia_library.settings')->get('emedialibrary-key');
+    $mediadbUrl = $emedialibraryUrl . "/mediadb/services/lists/search/entityplayer";
   
     // Retrieve  comma-separated list from the module settings.
-    $options = $this->fetchImageSizeOptions();
+    $options = $this->fetchEntityPlayers($mediadbUrl, $entermediaKey);
   
   
     $form2['player_id'] = [
       '#type' => 'select',
-      '#title' => t('Preset Id'),
+      '#title' => t('Player Type'),
       '#options' => $options,
       '#default_value' => $settings['player_id'],
-      '#description' => t('Select the default Preset Id for this field.'),
+      '#description' => t('Select the default Player type for this field.'),
     ];
   
     return $form2;
   }
 
 
-  public static function fetchImageSizeOptions() {
-  $options = [];
-
-  // Get the eMedia Library URL and API key from the module settings.
-  $emedialibraryUrl = \Drupal::config('emedia_library.settings')->get('emedialibrary-url');
-  $entermediaKey = \Drupal::config('emedia_library.settings')->get('emedialibrary-key');
-  $mediadbUrl = $emedialibraryUrl . "/mediadb/services/lists/search/convertpreset";
+public static function fetchEntityPlayers(String $mediadbUrl, String $entermediaKey) {
+ $options = [];
 
  $query = [
     "page" => "1",
@@ -146,7 +137,9 @@ public function getSettings() {
   $httpcode = $response->getStatusCode();
 
   if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
-    $json = json_decode($response, TRUE);
+    $body = $response->getBody()->getContents();
+    
+    $json = json_decode($body, TRUE);
     if (isset($json['results']) && is_array($json['results'])) {
       foreach ($json['results'] as $preset) {
         $options[$preset["id"]] = $preset["name"];

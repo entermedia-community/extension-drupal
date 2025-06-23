@@ -49,7 +49,9 @@ class EmediaLibraryFormatter extends FormatterBase {
       $httpcode = $response->getStatusCode();
 
       if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
-        $jsonresponse = json_decode($response, TRUE);
+        $body = $response->getBody()->getContents();
+        $jsonresponse = json_decode($body, TRUE);
+
         if (isset($jsonresponse["response"])) {
           
           if ($jsonresponse["response"]["status"] == 'ok')
