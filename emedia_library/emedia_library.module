@@ -12,3 +12,10 @@ function emedia_library_page_attachments(array &$attachments) {
   $attachments['#attached']['drupalSettings']['emedia_library']['emedialibraryUrl'] = $emedialibraryUrl;
   $attachments['#attached']['library'][] = 'emedia_library/emedia_library';
 }
+
+/**
+ * Implements hook_preprocess_form_element__new_storage_type().
+ */
+function emedia_library_preprocess_form_element__new_storage_type(&$variables) {
+  $variables['#attached']['library'][] = 'emedia_library/emedia_library-field-type-icon';
+}

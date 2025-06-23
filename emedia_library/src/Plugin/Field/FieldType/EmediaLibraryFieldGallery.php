@@ -8,28 +8,28 @@ use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Plugin implementation of the 'emedia_library_field' field type.
+ * Plugin implementation of the 'emedia_library_field_gallery' field type.
  *
  * @FieldType(
- *   id = "emedia_library_field",
- *   label = @Translation("eMedia Image"),
- *   description = @Translation("A field that pulls an image URL from eMedia Library settings."),
+ *   id = "emedia_library_field_gallery",
+ *   label = @Translation("eMedia Gallery"),
+ *   description = @Translation("Pulls a Media Gallery from eMedia Library."),
  *   default_widget = "emedia_library_widget",
  *   default_formatter = "emedia_library_formatter"
  * )
  */
-class EmediaLibraryField extends FieldItemBase {
+class EmediaLibraryFieldGallery extends FieldItemBase {
 
   /**
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-    $properties['asset_id'] = DataDefinition::create('string')
-      ->setLabel(t('Asset ID'));
+    $properties['entity_id'] = DataDefinition::create('string')
+      ->setLabel(t('Entity ID'));
 
-    $properties['presetid'] = DataDefinition::create('string')
-      ->setLabel(t('Preset Id'))
-      ->setDescription(t('Select the Preset Id for this asset.'));
+    $properties['player_id'] = DataDefinition::create('string')
+      ->setLabel(t('Entity Player'))
+      ->setDescription(t('Select the Entity Player.'));
 
     return $properties;
   }
@@ -40,11 +40,14 @@ class EmediaLibraryField extends FieldItemBase {
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     return [
       'columns' => [
-        'asset_id' => [
+        'entity_id' => [
           'type' => 'varchar',
           'length' => 255,
         ],
-        
+        'player_id' => [
+          'type' => 'varchar',
+          'length' => 128,
+        ],
       ],
     ];
   }
@@ -53,7 +56,7 @@ class EmediaLibraryField extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    return empty($this->get('asset_id')->getValue());
+    return empty($this->get('entity_id')->getValue());
   }
 
   /**
@@ -64,9 +67,18 @@ class EmediaLibraryField extends FieldItemBase {
    */
   public static function defaultFieldSettings() {
     return [
-      'presetid' => 'webplargeimage',
+      'player_id' => 'webplargeimage',
     ];
   }
+
+  /**
+ * {@inheritdoc}
+ */
+public function getSettings() {
+  return [
+    'icon' => 'image',
+  ];
+}
 
   /**
    * Build the settings form for the field type.
@@ -86,11 +98,11 @@ class EmediaLibraryField extends FieldItemBase {
     $options = $this->fetchImageSizeOptions();
   
   
-    $form2['presetid'] = [
+    $form2['player_id'] = [
       '#type' => 'select',
       '#title' => t('Preset Id'),
       '#options' => $options,
-      '#default_value' => $settings['presetid'],
+      '#default_value' => $settings['player_id'],
       '#description' => t('Select the default Preset Id for this field.'),
     ];
   
@@ -120,22 +132,18 @@ class EmediaLibraryField extends FieldItemBase {
     ]
   ];
 
-  $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, $mediadbUrl);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_TIMEOUT_MS, 3000);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/json',
-    'X-tokentype: entermedia', 
-    'X-token: ' . $entermediaKey, 
+  
+  $client = \Drupal::httpClient();
+  $response = $client->post($mediadbUrl, [
+    'headers' => [
+      'Content-Type' => 'application/json',
+      'X-tokentype' => 'entermedia', 
+      'X-token' => $entermediaKey,
+    ],
+    'body' => json_encode($query),
+    'timeout' => 3,
   ]);
-
-  curl_setopt($ch, CURLOPT_POST, true);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($query));
-
-  $response = curl_exec($ch);
-  $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  curl_close($ch);
+  $httpcode = $response->getStatusCode();
 
   if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
     $json = json_decode($response, TRUE);
@@ -168,7 +176,7 @@ class EmediaLibraryField extends FieldItemBase {
     $summary = [];
     $settings = $this->getSettings();
 
-    $summary[] = t('Default Preset Id: @size', ['@size' => $settings['presetid']]);
+    $summary[] = t('Default Preset Id: @size', ['@size' => $settings['player_id']]);
 
     return $summary;
   }

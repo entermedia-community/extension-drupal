@@ -77,7 +77,6 @@ var ckeditor;
             } else {
               img.attr('src', assetSrc);
             }
-            $('.emedia-dialog').dialog('close');
           }
 
           // Close the Drupal dialog.

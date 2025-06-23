@@ -31,3 +31,7 @@ admin.emedia_library_picker:
       css/emedia_library.css: {}
       css/emedia_library_picker.admin.css: { }
 
+emedia_library-field-type-icon:
+  css:
+    theme:
+      css/emedia_library-field-type-icon.css: {}
