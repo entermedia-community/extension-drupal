@@ -34,7 +34,7 @@ class EmediaLibraryWidget extends WidgetBase {
     $entermediaKey = $config->get('emedialibrary-key');
 
     
-    $blockfindUrl = $emedialibraryUrl . '/blockfind/index.html?entermedia.key=' . $emedialibraryKey;
+    $blockfindUrl = $emedialibraryUrl . '/blockfind/index.html?entermedia.key=' . $entermediaKey;
 
     $field_label = $element['#title'];
 
@@ -81,55 +81,67 @@ class EmediaLibraryWidget extends WidgetBase {
 
       $assetURL = $mediadbUrl . "/" . $assetid;
 
-      
-    $client = \Drupal::httpClient();
-    $response = $client->post($assetURL, [
-      'headers' => [
-        'Content-Type' => 'application/json',
-        'X-tokentype' => 'entermedia', 
-        'X-token' => $entermediaKey,
-      ],
-      'timeout' => 10,
-    ]);
-    $httpcode = $response->getStatusCode();
-      
-      if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
-        $body = $response->getBody()->getContents();
-        $jsonresponse = json_decode($body, TRUE);
-        if (isset($jsonresponse["response"])) {
-          if($jsonresponse["response"]["status"] == 'ok') {
-            if (isset($jsonresponse["data"])) {
-              $data = $jsonresponse["data"];
-              
-              if (is_array($data["downloads"]) && count($data["downloads"]) > 0) {
+      try {
+      $client = \Drupal::httpClient();
+      $response = $client->post($assetURL, [
+        'headers' => [
+          'Content-Type' => 'application/json',
+          'X-tokentype' => 'entermedia', 
+          'X-token' => $entermediaKey,
+        ],
+        'timeout' => 10,
+      ]);
+      $httpcode = $response->getStatusCode();
+        
+        if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
+          $body = $response->getBody()->getContents();
+          $jsonresponse = json_decode($body, TRUE);
+          if (isset($jsonresponse["response"])) {
+            if($jsonresponse["response"]["status"] == 'ok') {
+              if (isset($jsonresponse["data"])) {
+                $data = $jsonresponse["data"];
+                
+                if (is_array($data["downloads"]) && count($data["downloads"]) > 0) {
 
-                $downloads = $data["downloads"];
-                $imgsrc = '';
-                foreach ($downloads as $download) {
-                  if (isset($download['id']) && $download['id'] === $presetid) {
-                    $imgsrc = $download['download'];
-                    break;
+                  $downloads = $data["downloads"];
+                  $imgsrc = '';
+                  foreach ($downloads as $download) {
+                    if (isset($download['id']) && $download['id'] === $presetid) {
+                      $imgsrc = $download['download'];
+                      break;
+                    }
+                  }
+
+                  // If no match is found, default to the first download element.
+                  if ($imgsrc === '' && isset($downloads[0]['download'])) {
+                    $imgsrc = $downloads[0]['download'];
+                  }
+                  
+                  if ($imgsrc !== '') {
+                    $thumbnail_url = $imgsrc;
                   }
                 }
-
-                // If no match is found, default to the first download element.
-                if ($imgsrc === '' && isset($downloads[0]['download'])) {
-                  $imgsrc = $downloads[0]['download'];
-                }
                 
-                if ($imgsrc !== '') {
+                if ($imgsrc!== '')
+                {
                   $thumbnail_url = $imgsrc;
                 }
               }
-              
-              if ($imgsrc!== '')
-              {
-                $thumbnail_url = $imgsrc;
-              }
             }
           }
-        }
-     }
+      }
+      }
+      catch (GuzzleException $error) {
+        // Get the original response
+        $response = $error->getResponse();
+        // Get the info returned from the remote server.
+        $response_info = $response->getBody()->getContents();
+        // Using FormattableMarkup allows for the use of <pre/> tags, giving a more readable log item.
+        $message = new FormattableMarkup('API connection error. Error details are as follows:<pre>@response</pre>', ['@response' => print_r(json_decode($response_info), TRUE)]);
+        // Log the error
+        watchdog_exception('Remote API Connection', $error, $message);
+      }
+
     }
 
     // Add a thumbnail field to display the selected asset's preview image.
