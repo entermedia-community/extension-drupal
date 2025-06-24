@@ -89,7 +89,7 @@ class EmediaLibraryWidget extends WidgetBase {
         'X-tokentype' => 'entermedia', 
         'X-token' => $entermediaKey,
       ],
-      'timeout' => 3,
+      'timeout' => 10,
     ]);
     $httpcode = $response->getStatusCode();
       
