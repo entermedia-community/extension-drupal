@@ -8,17 +8,17 @@ use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Plugin implementation of the 'emedia_library_field_field' field type.
+ * Plugin implementation of the 'emedia_library_field' field type.
  *
  * @FieldType(
- *   id = "emedia_library_field_field",
+ *   id = "emedia_library_field",
  *   label = @Translation("eMedia Image"),
  *   description = @Translation("Pulls media assets from eMedia Library."),
  *   default_widget = "emedia_library_widget",
  *   default_formatter = "emedia_library_formatter"
  * )
  */
-class EmediaLibraryFieldField extends FieldItemBase {
+class EmediaLibraryField extends FieldItemBase {
 
   /**
    * {@inheritdoc}
