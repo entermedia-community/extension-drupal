@@ -82,6 +82,27 @@ class EmediaLibraryWidget extends WidgetBase {
       $assetURL = $mediadbUrl . "/" . $assetid;
 
       try {
+
+      // Initialize cURL.
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $assetURL);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT_MS, 2000);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'X-tokentype: entermedia', 
+        'X-token: ' . $entermediaKey, 
+      ]);
+
+      // Execute the cURL request.
+      $response = curl_exec($ch);
+      $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+      $curl_error = curl_error($ch); // Capture cURL error message.
+      curl_close($ch);
+
+
+
+/*
       $client = \Drupal::httpClient();
       $response = $client->post($assetURL, [
         'headers' => [
@@ -92,10 +113,11 @@ class EmediaLibraryWidget extends WidgetBase {
         'timeout' => 10,
       ]);
       $httpcode = $response->getStatusCode();
-        
+  */      
         if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
-          $body = $response->getBody()->getContents();
-          $jsonresponse = json_decode($body, TRUE);
+          //$body = $response->getBody()->getContents();
+          //$jsonresponse = json_decode($body, TRUE);
+          $jsonresponse = json_decode($response, TRUE);
           if (isset($jsonresponse["response"])) {
             if($jsonresponse["response"]["status"] == 'ok') {
               if (isset($jsonresponse["data"])) {
