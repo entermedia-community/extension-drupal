@@ -43,7 +43,6 @@ class EmediaLibraryFormatter extends FormatterBase {
           'X-tokentype' => 'entermedia', 
           'X-token' => $entermediaKey,
         ],
-        'body' => json_encode($query),
         'timeout' => 3,
       ]);
       $httpcode = $response->getStatusCode();
