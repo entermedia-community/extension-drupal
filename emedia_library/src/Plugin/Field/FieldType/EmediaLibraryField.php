@@ -44,10 +44,7 @@ class EmediaLibraryField extends FieldItemBase {
           'type' => 'varchar',
           'length' => 255,
         ],
-        'preset_id' => [
-          'type' => 'varchar',
-          'length' => 128,
-        ],
+        
       ],
     ];
   }
