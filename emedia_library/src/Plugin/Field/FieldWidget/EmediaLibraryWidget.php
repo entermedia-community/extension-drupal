@@ -31,7 +31,7 @@ class EmediaLibraryWidget extends WidgetBase {
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     $config = \Drupal::config('emedia_library.settings');
     $emedialibraryUrl = $config->get('emedialibrary-url');
-    $emedialibraryKey = $config->get('emedialibrary-key');
+    $entermediaKey = $config->get('emedialibrary-key');
 
     
     $blockfindUrl = $emedialibraryUrl . '/blockfind/index.html?entermedia.key=' . $emedialibraryKey;
@@ -89,7 +89,6 @@ class EmediaLibraryWidget extends WidgetBase {
         'X-tokentype' => 'entermedia', 
         'X-token' => $entermediaKey,
       ],
-      'body' => json_encode($query),
       'timeout' => 3,
     ]);
     $httpcode = $response->getStatusCode();
