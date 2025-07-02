@@ -11,14 +11,14 @@ use Drupal\Core\Security\TrustedCallbackInterface;
  * Plugin implementation of the 'emedia_library_widget' widget.
  *
  * @FieldWidget(
- *   id = "emedia_library_widget",
- *   label = @Translation("eMedia Library Widget"),
- *   field_types = {"emedia_library_field"}
+ *   id = "emedia_library_widget_entity",
+ *   label = @Translation("eMedia Library Widget Entity"),
+ *   field_types = {"emedia_library_field_gallery"}
  * )
  */
 
 
-class EmediaLibraryWidget extends WidgetBase {
+class EmediaLibraryWidgetEntity extends WidgetBase {
 
     public static function trustedCallbacks() {
         return ['pullEmediaAsset'];
@@ -33,54 +33,55 @@ class EmediaLibraryWidget extends WidgetBase {
     $emedialibraryUrl = $config->get('emedialibrary-url');
     $entermediaKey = $config->get('emedialibrary-key');
 
-    
-    $blockfindUrl = $emedialibraryUrl . '/blockfind/start.html?entermedia.key=' . $entermediaKey.'&pickingtargettype=asset';
-
     $field_label = $element['#title'];
-
     $field_definition = $items->getFieldDefinition();
     $uid = $field_definition->getUniqueIdentifier();
+    $emedia_module_id = $field_definition->getSetting('emedia_module_id') ?? '';
 
-    $presetid = $field_definition->getSetting('presetid') ?? 'webplargeimage';
+    $blockfindUrl = $emedialibraryUrl . '/blockfind/start.html?entitymoduleid=' .$emedia_module_id . '&entermedia.key=' . $entermediaKey . '&pickingmoduleid=' . $emedia_module_id .'&pickingtargettype=entity';
     
-    // Generate a unique ID for the asset_id field using $element['#id'].
+    $entity_id = $items[$delta]->entity_id ?? '';
+    $player_id = $field_definition->getSetting('player_id') ?? 'gallery';
+    $assetid = $items[$delta]->primarymedia_id ?? '';
+   
     $field_wrapper_id = 'wrapper-'.$delta;
-
-    $assetid = $items[$delta]->asset_id ?? '';
-
-    // Add a container for all elements.
     $element['#prefix'] = '<div id="eml-field-' . $uid . '" data-fieldid="'.$uid.'" class="eml-field-container">';
     $element['#suffix'] = '</div>';
 
-
-    $element['asset_id_label'] = [
+    $element['entity_id_label'] = [
       '#type' => 'markup',
-      '#markup' => '<span class="form-item__label">' . $this->t('@label', ['@label' => $field_label]) . '</span>',
-      
+      '#markup' => '<span class="form-item__label">' . $this->t('@label', ['@label' => $field_label]) . '</span>',      
     ];
 
-    $element['asset_id'] = [
+    $element['entity_id'] = [
       '#type' => 'hidden',
-      '#default_value' => $assetid,
+      '#default_value' => $entity_id,
       '#attributes' => [
-        'class' => ['emedia-image-assetid'],
+        'class' => ['emedia-entityid'],
       ],
     ];
 
-    $element['presetid'] = [
+    $element['player_id'] = [
       '#type' => 'hidden',
-      '#default_value' => $presetid,
+      '#default_value' => $player_id,
       '#attributes' => [
-        'class' => ['emedia-image-presetid'],
+        'class' => ['emedia-playerid'],
+      ],
+    ];
+
+    $element['primarymedia_id'] = [
+      '#type' => 'hidden',
+      '#default_value' => $assetid,
+      '#attributes' => [
+        'class' => ['emedia-primarymediaid'],
       ],
     ];
 
     $thumbnail_url = '';
-    if ($assetid != '') {
+    if ($assetid != '') { 
       $mediadbUrl = $emedialibraryUrl . "/mediadb/services/module/asset/data";
 
       $assetURL = $mediadbUrl . "/" . $assetid;
-
       try {
 
       // Initialize cURL.
@@ -113,6 +114,7 @@ class EmediaLibraryWidget extends WidgetBase {
 
                   $downloads = $data["downloads"];
                   $imgsrc = '';
+                  $presetid = "mediumimage";
                   foreach ($downloads as $download) {
                     if (isset($download['id']) && $download['id'] === $presetid) {
                       $imgsrc = $download['download'];
@@ -160,6 +162,8 @@ class EmediaLibraryWidget extends WidgetBase {
     {
       $thumbnailmarkup = '';
     }
+
+    
     
     $element['thumbnail'] = [
       '#type' => 'markup',
@@ -174,17 +178,17 @@ class EmediaLibraryWidget extends WidgetBase {
       '#value' => $this->t('Find @label', ['@label' => $field_label]),
       '#attributes' => [
         'id' => 'pull-default-button-' . $delta,
-        'class' => ['pull-emedia-asset-button'],
+        'class' => ['pull-emedia-entity-button'],
         'data-emedialibrary-url' => $emedialibraryUrl,
         'data-blockfind-url' => $blockfindUrl,
         'data-target-id' => $field_wrapper_id, 
       ],
-      '#prefix' => '<div class="emedia-find-asset-wrapper">',
+      '#prefix' => '<div class="emedia-find-entity-wrapper">',
       '#suffix' => '</div>',
     ];
 
     // Attach the library to the widget.
-    $element['#attached']['library'][] = 'emedia_library/emedia_library_widget';
+    $element['#attached']['library'][] = 'emedia_library/emedia_library_widget_entity';
 
     return $element;
   }

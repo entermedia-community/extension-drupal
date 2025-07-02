@@ -1,5 +1,4 @@
-let assetfield;
-let fieldid;
+let fieldid, assetfield, entityfield, entityfieldprimarymedia;
 let emedialibraryUrl =  ''; 
 let emedialibraryKey =  '';
 
@@ -28,59 +27,76 @@ var ckeditor;
         
         const assetid = message.assetid;
         const url = `${emedialibraryUrl}/mediadb/services/module/asset/data/${assetid}`;
-
         let responseData = null;
+        let assetData = null;
 
-        try {
-          const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-tokentype': 'entermedia',
-              'X-token': emedialibraryKey
-            },
-          });
+        if (assetid !== undefined) {
+          try {
+            const response = await fetch(url, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-tokentype': 'entermedia',
+                'X-token': emedialibraryKey
+              },
+            });
 
-          if (response.ok) {
-            responseData = await response.json();
-            console.log('Asset Data:', responseData);
-          } else {
-            console.error('Failed to fetch asset data:', response.statusText);
-          }
-        } catch (error) {
-          console.error('Error during GET call:', error);
-        }     
-
-        const assetData = responseData?.data || null;
-
-          if (message.target == 'ckeditor5') {
-            // If the target is ckeditor5, we need to update the editor.
-            if (ckeditor !== undefined) {
-              updateEditor(ckeditor, assetData);
-            }
-          }
-          else if (message.target != '') {
-            assetfield.val(assetid);
-            const assetSrc = assetData.downloads[0].download;
-            
-            
-            let img = $('#eml-thumbnail-' + fieldid + '');
-
-            if (img.length === 0) {
-              
-              img = $('<img>', {
-                id: 'eml-thumbnail-' + fieldid,
-                src: assetSrc, 
-              });
-            
-              assetfield.closest('.eml-field-container').find('.emedia-thumbnail-wrapper').append(img);
+            if (response.ok) {
+              responseData = await response.json();
+              console.log('Asset Data:', responseData);
             } else {
-              img.attr('src', assetSrc);
+              console.error('Failed to fetch asset data:', response.statusText);
             }
-          }
+          } catch (error) {
+            console.error('Error during GET call:', error);
+          }     
 
-          // Close the Drupal dialog.
-          jQuery('.emedia-dialog').dialog('close');
+          assetData = responseData?.data || null;
+      }
+
+      
+
+      if (message.target == 'ckeditor5') {
+        // If the target is ckeditor5, we need to update the editor.
+        if (ckeditor !== undefined) {
+          updateEditor(ckeditor, assetData);
+        }
+      }
+      else if (message.target != '') {
+        let container = $("#eml-field-"+ fieldid);
+
+        //entity picker
+        var entityid = message.entityid || '';
+        if (entityid !== '') {
+          entityfield.val(entityid);
+          entityfieldprimarymedia.val(assetid);
+        }
+        else {
+          //asset picker
+          assetfield.val(assetid);
+        }
+
+        if (assetData != null) {
+          const assetSrc = assetData.downloads[0].download;
+          let img = container.find(".emedia-thumbnail");
+          if (img.length === 0) {
+            
+            img = $('<img>', {
+              id: 'eml-thumbnail-' + fieldid,
+              src: assetSrc, 
+              class: "emedia-thumbnail"
+            });
+          
+            container.find('.emedia-thumbnail-wrapper').append(img);
+          } else {
+            img.attr('src', assetSrc);
+          }
+        }
+
+      }
+
+      // Close the Drupal dialog.
+      jQuery('.emedia-dialog').dialog('close');
 
       }
   }

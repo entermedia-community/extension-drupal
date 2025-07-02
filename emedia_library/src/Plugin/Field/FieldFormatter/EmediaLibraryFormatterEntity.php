@@ -6,15 +6,15 @@ use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
 
 /**
- * Plugin implementation of the 'emedia_library_formatter' formatter.
+ * Plugin implementation of the 'emedia_library_formatter_entity' formatter.
  *
  * @FieldFormatter(
- *   id = "emedia_library_formatter",
+ *   id = "emedia_library_formatter_entity",
  *   label = @Translation("eMedia Library Formatter"),
- *   field_types = {"emedia_library_field_image"}
+ *   field_types = {"emedia_library_field_entity"}
  * )
  */
-class EmediaLibraryFormatter extends FormatterBase {
+class EmediaLibraryFormatterEntity extends FormatterBase {
 
   /**
    * {@inheritdoc}
@@ -27,36 +27,37 @@ class EmediaLibraryFormatter extends FormatterBase {
     $entermediaKey = \Drupal::config('emedia_library.settings')->get('emedialibrary-key');
 
     $field_definition = $values->getFieldDefinition();
-    $preset_id = $field_definition->getSetting('preset_id') ?? '';
+    $emedia_module_id = $field_definition->getSetting('emedia_module_id') ?? '';
+    $player_id = $field_definition->getSetting('player_id') ?? 'gallery';
 
-    $mediadbUrl = $emedialibraryUrl . "/mediadb/services/module/asset/players/webplayer/render.json";
+    $mediadbUrl = $emedialibraryUrl . "/mediadb/services/module/".$emedia_module_id."/players/render.json";
 
     foreach ($values as $delta => $value) {     
       //Only one value exists in the field.
-      $mediadbUrl = $mediadbUrl . "?assetid=".$value->asset_id."&presetid=".$preset_id;
+      $mediadbUrl = $mediadbUrl . "?entityid=".$value->entity_id."&playertype=".$player_id;
 
-     
-      $client = \Drupal::httpClient();
-      $response = $client->post($mediadbUrl, [
-        'headers' => [
-          'X-tokentype' => 'entermedia', 
-          'X-token' => $entermediaKey,
-        ],
-        'timeout' => 3,
-      ]);
-      $httpcode = $response->getStatusCode();
+
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $mediadbUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 3000);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+      'Content-Type: text/html',
+      'X-tokentype: entermedia', 
+      'X-token: ' . $entermediaKey, 
+    ]);
+  
+
+    $response = curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
       if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
-        $body = $response->getBody()->getContents();
-        $jsonresponse = json_decode($body, TRUE);
-
-        if (isset($jsonresponse["response"])) {
-          
-          if ($jsonresponse["response"]["status"] == 'ok')
-          {
-            
-            $html = $jsonresponse["html"];
-
+        $jsonresponse = json_decode($response, TRUE);
+       
+        if (isset($jsonresponse["html"])) {
+          $html = $jsonresponse["html"];
             if ($html!== '')
             {
 
@@ -67,7 +68,12 @@ class EmediaLibraryFormatter extends FormatterBase {
                 '#cache' => [
                   'max-age' => 1000 * 60 * 60, // Cache for 1 hour.
                 ],
-                //'#label_hidden' => 'true', 
+                '#attached' => [
+                  'library' => [
+                    'emedia_library/emedia_library_field_entity',
+                  ],
+                ],
+                  //'#label_hidden' => 'true', 
               ];
             }
             else {
@@ -82,7 +88,7 @@ class EmediaLibraryFormatter extends FormatterBase {
                 //'#label_hidden' => 'true', // Hide the label.
               ];
             }
-          }
+          
         }
       } else {
         // Log the error if the cURL request fails.
@@ -94,7 +100,7 @@ class EmediaLibraryFormatter extends FormatterBase {
         ]);
 
         $elements[$delta] = [
-          '#markup' => $this->t('Failed to fetch the eMedia Library asset. ' . $curl_error),
+          '#markup' => $this->t('Failed to fetch the eMedia Library gallery. ' . $curl_error),
           //'#label_hidden' => 'true', // Hide the label.
         ];
       }

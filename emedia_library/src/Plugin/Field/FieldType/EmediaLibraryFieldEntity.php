@@ -8,17 +8,17 @@ use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Plugin implementation of the 'emedia_library_field_gallery' field type.
+ * Plugin implementation of the 'emedia_library_field_entity' field type.
  *
  * @FieldType(
- *   id = "emedia_library_field_gallery",
- *   label = @Translation("eMedia Gallery"),
- *   description = @Translation("Pulls a Media Gallery from eMedia Library."),
- *   default_widget = "emedia_library_widget",
- *   default_formatter = "emedia_library_formatter"
+ *   id = "emedia_library_field_entity",
+ *   label = @Translation("eMedia Entity"),
+ *   description = @Translation("Pulls a Media from eMedia Library."),
+ *   default_widget = "emedia_library_widget_entity",
+ *   default_formatter = "emedia_library_formatter_entity"
  * )
  */
-class EmediaLibraryFieldGallery extends FieldItemBase {
+class EmediaLibraryFieldEntity extends FieldItemBase {
 
   /**
    * {@inheritdoc}
@@ -27,9 +27,17 @@ class EmediaLibraryFieldGallery extends FieldItemBase {
     $properties['entity_id'] = DataDefinition::create('string')
       ->setLabel(t('Entity ID'));
 
+    $properties['emedia_module_id'] = DataDefinition::create('string')
+    ->setLabel(t('Folder'))
+    ->setDescription(t('Select the Folder.'));
+
     $properties['player_id'] = DataDefinition::create('string')
       ->setLabel(t('Entity Player'))
       ->setDescription(t('Select the Entity Player.'));
+
+    $properties['primarymedia_id'] = DataDefinition::create('string')
+      ->setLabel(t('Primary Media'))
+      ->setDescription(t('Select the Entity Thumbnail.'));
 
     return $properties;
   }
@@ -44,7 +52,15 @@ class EmediaLibraryFieldGallery extends FieldItemBase {
           'type' => 'varchar',
           'length' => 255,
         ],
+        'emedia_module_id' => [
+          'type' => 'varchar',
+          'length' => 255,
+        ],
         'player_id' => [
+          'type' => 'varchar',
+          'length' => 128,
+        ],
+        'primarymedia_id' => [
           'type' => 'varchar',
           'length' => 128,
         ],
@@ -67,6 +83,7 @@ class EmediaLibraryFieldGallery extends FieldItemBase {
    */
   public static function defaultFieldSettings() {
     return [
+      'emedia_module_id' => '',
       'player_id' => 'gallery',
     ];
   }
@@ -88,16 +105,22 @@ class EmediaLibraryFieldGallery extends FieldItemBase {
       // Get the eMedia Library URL and API key from the module settings.
     $emedialibraryUrl = \Drupal::config('emedia_library.settings')->get('emedialibrary-url');
     $entermediaKey = \Drupal::config('emedia_library.settings')->get('emedialibrary-key');
+      
+    $mediadbUrl = $emedialibraryUrl . "/mediadb/services/lists/search/module";
+    $options = $this->fetchEntity($mediadbUrl, $entermediaKey);
+    $form2['emedia_module_id'] = [
+      '#type' => 'select',
+      '#title' => t('Folder'),
+      '#options' => $options,
+      '#description' => t('Select the Folder for this field.'),
+    ];
+   
     $mediadbUrl = $emedialibraryUrl . "/mediadb/services/lists/search/entityplayer";
-  
-    // Retrieve  comma-separated list from the module settings.
-    $options = $this->fetchEntityPlayers($mediadbUrl, $entermediaKey);
-  
-  
+    $options2 = $this->fetchEntityPlayers($mediadbUrl, $entermediaKey);
     $form2['player_id'] = [
       '#type' => 'select',
       '#title' => t('Player Type'),
-      '#options' => $options,
+      '#options' => $options2,
       '#default_value' => $settings['player_id'],
       '#description' => t('Select the default Player type for this field.'),
     ];
@@ -123,6 +146,70 @@ public static function fetchEntityPlayers(String $mediadbUrl, String $entermedia
     ]
   ];
 
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $mediadbUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 3000);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+      'Content-Type: application/json',
+      'X-tokentype: entermedia', 
+      'X-token: ' . $entermediaKey, 
+    ]);
+
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($query));
+
+    $response = curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+
+  /*
+  $client = \Drupal::httpClient();
+  $response = $client->post($mediadbUrl, [
+    'headers' => [
+      'Content-Type' => 'application/json',
+      'X-tokentype' => 'entermedia', 
+      'X-token' => $entermediaKey,
+    ],
+    'body' => json_encode($query),
+    'timeout' => 3,
+  ]);
+  $httpcode = $response->getStatusCode();
+*/
+  if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
+    //$body = $response->getBody()->getContents();
+    $json = json_decode($response, TRUE);
+    if (isset($json['results']) && is_array($json['results'])) {
+      foreach ($json['results'] as $preset) {
+        $options[$preset["id"]] = $preset["name"];
+      }
+    }
+  }
+
+  return $options;
+}
+
+
+
+public static function fetchEntity(String $mediadbUrl, String $entermediaKey) {
+ $options = [];
+
+ $query = [
+    "page" => "1",
+    "hitsperpage" => "40",
+    "query" => [
+      "terms" => [
+        [
+          "field" => "isentity",
+          "operation" => "exact",
+          "value" => "true"
+        ]
+      ]
+    ]
+  ];
+
   
   $client = \Drupal::httpClient();
   $response = $client->post($mediadbUrl, [
@@ -138,11 +225,15 @@ public static function fetchEntityPlayers(String $mediadbUrl, String $entermedia
 
   if ($httpcode >= 200 && $httpcode < 300 && !empty($response)) {
     $body = $response->getBody()->getContents();
-    
     $json = json_decode($body, TRUE);
     if (isset($json['results']) && is_array($json['results'])) {
+
       foreach ($json['results'] as $preset) {
-        $options[$preset["id"]] = $preset["name"];
+        $name = $preset["name"];
+        if (is_array($name)) {
+          $name = $name["en"];
+        }
+        $options[$preset["id"]] = $name;
       }
     }
   }
@@ -169,7 +260,8 @@ public static function fetchEntityPlayers(String $mediadbUrl, String $entermedia
     $summary = [];
     $settings = $this->getSettings();
 
-    $summary[] = t('Default Preset Id: @size', ['@size' => $settings['player_id']]);
+    $summary[] = t('Default Folder: @emediamodule', ['@emediamodule' => $settings['emedia_module_id']]);
+    $summary[] = t('Default Player Id: @size', ['@size' => $settings['player_id']]);
 
     return $summary;
   }

@@ -2,7 +2,7 @@
 
 (function ($, Drupal) {
 
-  Drupal.behaviors.emediaLibraryWidget = {
+  Drupal.behaviors.emediaLibraryWidgetEntity = {
     attach: function (context, settings) {
      
      if (!emedialibraryUrl) {
@@ -10,19 +10,20 @@
         return; 
      }
 
-      $('.pull-emedia-asset-button', context).not('.emediaLibraryWidget-processed').each(function () {
+      $('.pull-emedia-entity-button', context).not('.emediaLibraryWidget-processed').each(function () {
         $(this).addClass('emediaLibraryWidget-processed').on('click', function (e) {
           e.preventDefault();
 
           const parentcontainer = $(this).closest('.eml-field-container');
           fieldid = parentcontainer.data("fieldid");
-          assetfield = parentcontainer.find('.emedia-image-assetid');
+          entityfield = parentcontainer.find('.emedia-entityid');
+          entityfieldprimarymedia = parentcontainer.find('.emedia-primarymediaid'); //TODO: use fieldid in the other side to get this fields
 
-          if (assetfield.length === 0) {
+          if (entityfield.length === 0) {
             console.error('Target field not found in the parent container.');
             return;
           }
-        
+          
           var blockfindUrl = $(this).data('blockfind-url');
           if (!blockfindUrl) {
             blockfindUrl = emedialibraryUrl + '/blockfind/';
